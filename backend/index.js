@@ -225,6 +225,32 @@ app.delete("/customers/:id", async (req, res) => {
     }
 });
 
+//available rooms per area
+app.get("/rooms/per_area", async (req, res) => {
+    try {
+        const rooms = await pool.query(
+            "SELECT * FROM available_rooms_per_area;"
+        );
+        res.json(rooms.rows);
+    } catch (error) {
+        console.error("Error fetching rooms:", error);
+        res.status(500).send("Internal Server Error");
+    }
+});
+
+//aggregated capacity per hotel
+app.get("/hotels/aggregated_capacity", async (req, res) => {
+    try {
+        const hotels = pool.query(
+            "SELECT * FROM aggregated_capacity_per_hotel;"
+        );
+        res.json(hotels.rows);
+    } catch (error) {
+        console.error("Error fetching hotels:", error);
+        res.status(500).send("Internal Server Error");
+    }
+});
+
 app.listen(3000, () => {
     console.log("Server is running on port 3000 and listening for requests...");
     pool.query("SELECT 1", (err, res) => {

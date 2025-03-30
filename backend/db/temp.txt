@@ -49,15 +49,21 @@ VALUES ('Silly Customer', CURRENT_DATE, '{"City": "TestCity", "StreetName": "Tes
 -- Update a customer.(done)
 UPDATE customer SET Name = 'Updated Customer' WHERE CustomerID = 1;
 
--- Delete a customer.
+-- Delete a customer. (done)
 DELETE FROM customer WHERE CustomerID = 1;
 
 
--- 2f.1: Retrieve data from the available_rooms_per_area view.
+-- 2f.1: Retrieve data from the available_rooms_per_area view.(done)
 SELECT * FROM available_rooms_per_area;
 
--- 2f.2: Retrieve data from the aggregated_capacity_per_hotel view.
+-- 2f.2: Retrieve data from the aggregated_capacity_per_hotel view.(done)
 SELECT * FROM aggregated_capacity_per_hotel;
+
+
+
+The User Interface should allow the insert/delete/update of all information related to
+customers, employees, hotels and rooms. 
+
 
 
 pages needed:
