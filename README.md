@@ -6,7 +6,7 @@
 DB_PASSWORD = yourPassword
 DB_NAME = yourDBName
 
-3: run node index.js
+3: run: npm run dev in that folder
 
-4: cd into the frontend folder
-5: open index.html
+4: cd into the frontend folder, then cd into Ehotels
+5: run: npm run dev
