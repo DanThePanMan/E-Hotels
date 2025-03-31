@@ -82,6 +82,22 @@ app.get("/bookings/:start/:end", async (req, res) => {
     }
 });
 
+//get allrooms with an email
+app.get("/rooms/:postalCode", async (req, res) => {
+    try {
+        const { postalCode } = req.params;
+        const rooms = await pool.query(
+            "SELECT R.*, H.Address AS HotelAddress FROM room R JOIN hotel H ON R.HotelAddress = H.Address WHERE H.Address->>'PostalCode' = $1",
+            [postalCode]
+        );
+
+        res.json(rooms.rows);
+    } catch (error) {
+        console.error("Error fetching rooms:", error);
+        res.status(500).send("Internal Server Error");
+    }
+});
+
 //dynamic query
 //Parameters: :capacity, :chain, :rating, :area, :max_price, :start_date, :end_date.
 app.get(
@@ -334,6 +350,21 @@ app.get("/hotels/aggregated_capacity", async (req, res) => {
         res.json(hotels.rows);
     } catch (error) {
         console.error("Error fetching hotels:", error);
+        res.status(500).send("Internal Server Error");
+    }
+});
+
+app.post("/bookings", async (req, res) => {
+    try {
+        const { HotelAddress, RoomID, CustomerID, CheckInDate, CheckOutDate } =
+            req.body;
+        const newEmployee = await pool.query(
+            "INSERT INTO booking (HotelAddress, RoomID, CustomerID, CheckInDate, CheckOutDate)VALUES (  $1,  $2,  $3,  $4,  $5);",
+            [HotelAddress, RoomID, CustomerID, CheckInDate, CheckOutDate]
+        );
+        res.status(201).json(newEmployee.rows[0]);
+    } catch (error) {
+        console.error("Error inserting employee:", error);
         res.status(500).send("Internal Server Error");
     }
 });

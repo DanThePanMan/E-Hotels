@@ -1,6 +1,6 @@
 import React from "react";
 
-export default function card(props) {
+export default function Card(props) {
     const className = `a ${props.className || ""}`.trim();
     return (
         <div

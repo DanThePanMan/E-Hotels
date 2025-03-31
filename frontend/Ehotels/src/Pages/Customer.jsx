@@ -1,9 +1,23 @@
 import React, { useState, useEffect } from "react";
-import Card from "../components/card";
+import Card from "../components/Card";
+import Filter from "../components/filter";
+import Modal from "../components/modal";
 
 export default function Customer() {
     const [rooms, setRooms] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [modal, setModal] = useState(false);
+    const [mode, setMode] = useState("view");
+    const [filters, setFilters] = useState({
+        capacity: null,
+        chain: null,
+        rating: null,
+        area: null,
+        max_price: null,
+        start_date: null,
+        end_date: null,
+    });
+    const [hotel, setHotel] = useState("");
 
     useEffect(() => {
         try {
@@ -17,6 +31,7 @@ export default function Customer() {
                 .then((data) => {
                     setRooms(data);
                     setLoading(false);
+                    console.log(data);
                 });
         } catch (error) {
             console.log(error);
@@ -26,11 +41,12 @@ export default function Customer() {
     return (
         <div className="w-screen h-screen bg-white flex flex-col justify-start items-center p-32">
             <h1 className="text-3xl font-bold underline text-black">Hotels</h1>
+            <Filter
+                setMode={setMode}
+                setFilters={setFilters}
+                setModal={setModal}></Filter>
             {loading && <p>Loading...</p>}
             {!loading && rooms.length === 0 && <p>No hotels available</p>}
-            {!loading && rooms.length > 0 && (
-                <p>{rooms.length} hotels available</p>
-            )}
             {!loading && rooms.length > 0 && (
                 <div className="grid grid-cols-5 gap-4 mt-4">
                     {rooms.map((hotel) => (
@@ -53,10 +69,26 @@ export default function Customer() {
                             </p>
                             <p>Rating: {hotel.rating}</p>
                             <p>Number of Rooms: {hotel.numrooms}</p>
-                            <button className="btn mt-2">View Details</button>
+                            <button
+                                className="btn mt-2"
+                                onClick={() => {
+                                    setModal(true);
+                                    setHotel(hotel.address);
+                                    setMode("view");
+                                }}>
+                                View Rooms
+                            </button>
                         </Card>
                     ))}
                 </div>
+            )}
+            {modal && (
+                <Modal
+                    setModal={setModal}
+                    mode={mode}
+                    filters={filters}
+                    hotel={hotel}
+                />
             )}
         </div>
     );

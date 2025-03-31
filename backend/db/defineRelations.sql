@@ -1,4 +1,3 @@
--- Drop all existing tables in reverse dependency order
 DROP TABLE IF EXISTS ArchivedRenting CASCADE;
 DROP TABLE IF EXISTS ArchivedBooking CASCADE;
 DROP TABLE IF EXISTS Renting CASCADE;
@@ -87,6 +86,7 @@ CREATE TABLE Renting (
     EmployeeSSN VARCHAR(15) NOT NULL,
     CheckInDate DATE NOT NULL,
     CheckOutDate DATE NOT NULL,
+    PaymentStatus VARCHAR(10) DEFAULT 'Unpaid' CHECK (PaymentStatus IN ('Paid','Unpaid')),  -- <-- New line added
     FOREIGN KEY (HotelAddress, RoomID) REFERENCES Room(HotelAddress, RoomID) ON DELETE CASCADE
 );
 
