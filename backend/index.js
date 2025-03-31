@@ -225,6 +225,93 @@ app.delete("/customers/:id", async (req, res) => {
     }
 });
 
+//inserting a new employee
+app.post("/employees", async (req, res) => {
+    try {
+        const { SSN, name, role } = req.body;
+        const newEmployee = await pool.query(
+            "INSERT INTO employee (SSN, Name, Role) VALUES ($1, $2, $3);",
+            [SSN, name, role]
+        );
+        res.status(201).json(newEmployee.rows[0]);
+    } catch (error) {
+        console.error("Error inserting employee:", error);
+        res.status(500).send("Internal Server Error");
+    }
+});
+
+//promoting an employee
+app.put("/employees/:ssn", async (req, res) => {
+    try {
+        const { ssn } = req.params;
+        const updatedEmployee = await pool.query(
+            "UPDATE employee SET Role = 'Manager' WHERE SSN = '$1",
+            [ssn]
+        );
+        if (updatedEmployee.rows.length === 0) {
+            return res.status(404).send("Employee not found");
+        }
+        res.json(updatedEmployee.rows[0]);
+    } catch (error) {
+        console.error("Error updating employee:", error);
+        res.status(500).send("Internal Server Error");
+    }
+});
+
+//deleting an employee
+app.delete("/employees/:ssn", async (req, res) => {
+    try {
+        const { ssn } = req.params;
+        const deletedEmployee = await pool.query(
+            "DELETE FROM employee WHERE SSN = $1",
+            [ssn]
+        );
+        if (deletedEmployee.rows.length === 0) {
+            return res.status(404).send("Employee not found");
+        }
+        res.json(deletedEmployee.rows[0]);
+    } catch (error) {
+        console.error("Error deleting employee:", error);
+        res.status(500).send("Internal Server Error");
+    }
+});
+
+//convert booking to renting
+app.put("/bookings/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updatedBooking = await pool.query(
+            "INSERT INTO renting (HotelAddress, RoomID, CustomerID, EmployeeSSN, CheckInDate, CheckOutDate) SELECT HotelAddress, RoomID, CustomerID, '123-45-6789', CheckInDate, CheckOutDate FROM booking WHERE BookingID = $1; DELETE FROM booking WHERE BookingID = 1;",
+            [id]
+        );
+        if (updatedBooking.rows.length === 0) {
+            return res.status(404).send("Booking not found");
+        }
+        res.json(updatedBooking.rows[0]);
+    } catch (error) {
+        console.error("Error updating booking:", error);
+        res.status(500).send("Internal Server Error");
+    }
+});
+
+//recording customer payment for renting (Does not work)
+app.put("/renting/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updatedRenting = await pool.query(
+            "UPDATE renting SET PaymentStatus = 'Paid' WHERE RentingID = $1;",
+            [id]
+        );
+        if (updatedRenting.rows.length === 0) {
+            return res.status(404).send("Renting not found");
+        }
+        res.json(updatedRenting.rows[0]);
+    } catch (error) {
+        console.error("Error updating renting:", error);
+        res.status(500).send("Internal Server Error");
+    }
+});
+
 //available rooms per area
 app.get("/rooms/per_area", async (req, res) => {
     try {

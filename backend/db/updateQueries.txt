@@ -1,0 +1,93 @@
+-- =============================================================
+-- 2c.1: Retrieve all hotels for the "SleepyDan" chain.
+SELECT * FROM hotel WHERE chainname = 'SleepyDan';
+
+-- =============================================================
+-- 2c.2: Aggregation query to count the number of hotels per chain.
+SELECT chainname, COUNT(*) AS TotalHotels FROM hotel GROUP BY chainname;
+
+-- =============================================================
+-- 2c.3: Nested query to retrieve hotels with more rooms than the overall average.
+SELECT * FROM hotel WHERE numrooms > (SELECT AVG(numrooms) FROM hotel);
+
+-- =============================================================
+-- 2c.4: Date-range query to retrieve all bookings within a specific date range.
+SELECT * FROM booking 
+WHERE checkindate >= '2025-04-01' 
+  AND checkoutdate <= '2025-04-10';
+
+-- =============================================================
+-- 2c.5: Dynamic query for available rooms based on multiple criteria.
+-- Parameters: :capacity, :chain, :rating, :area, :max_price, :start_date, :end_date.
+SELECT R.*, H.ChainName, H.Rating, H.NumRooms, H.Address->>'City' AS City
+FROM room R
+JOIN hotel H ON R.HotelAddress = H.Address
+WHERE R.Capacity = :capacity
+  AND H.ChainName = :chain
+  AND H.Rating = :rating
+  AND H.Address->>'City' = :area
+  AND R.Price <= :max_price
+  AND NOT EXISTS (
+      SELECT 1 FROM booking B
+      WHERE B.HotelAddress = R.HotelAddress
+        AND B.RoomID = R.RoomID
+        AND B.CheckInDate < :end_date
+        AND B.CheckOutDate > :start_date
+  )
+  AND NOT EXISTS (
+      SELECT 1 FROM renting Ren
+      WHERE Ren.HotelAddress = R.HotelAddress
+        AND Ren.RoomID = R.RoomID
+        AND Ren.CheckInDate < :end_date
+        AND Ren.CheckOutDate > :start_date
+  );
+
+-- =============================================================
+-- 2c.6: Retrieve all rooms with a MiniBar in their amenities.
+SELECT * FROM room WHERE amenities ? 'MiniBar';
+
+-- =============================================================
+-- 2c.7: Retrieve data from the available_rooms_per_area view.
+SELECT * FROM available_rooms_per_area;
+
+-- =============================================================
+-- 2c.8: Retrieve data from the aggregated_capacity_per_hotel view.
+SELECT * FROM aggregated_capacity_per_hotel;
+
+-- =============================================================
+-- 2c.9: Examples of data modification queries for Customer.
+-- Insert a new customer.
+INSERT INTO customer (Name, RegistrationDate, Address)
+VALUES ('Silly Customer', CURRENT_DATE, '{"City": "TestCity", "StreetName": "Test St", "StreetNum": "100", "PostalCode": "00000"}');
+
+-- Update a customer.
+UPDATE customer SET Name = 'Updated Customer' WHERE CustomerID = 1;
+
+-- Delete a customer.
+DELETE FROM customer WHERE CustomerID = 1;
+
+
+
+
+-- =============================================================
+-- 2c.10: Data modification queries for Employee.
+-- Insert a new employee.
+INSERT INTO employee (SSN, Name, Role)
+VALUES ('123-45-6789', 'John Employee', 'Front Desk');
+
+-- Update an employee.
+UPDATE employee SET Role = 'Manager' WHERE SSN = '123-45-6789';
+
+-- Delete an employee.
+DELETE FROM employee WHERE SSN = '123-45-6789';
+
+-- =============================================================
+-- 2c.11: Query to convert a booking to a renting.
+-- This example inserts a new renting record based on an existing booking (using BookingID = 1)
+-- and then deletes the booking record.
+INSERT INTO renting (HotelAddress, RoomID, CustomerID, EmployeeSSN, CheckInDate, CheckOutDate) SELECT HotelAddress, RoomID, CustomerID, '123-45-6789', CheckInDate, CheckOutDate FROM booking WHERE BookingID = $1; DELETE FROM booking WHERE BookingID = 1;
+
+-- =============================================================
+-- 2c.12: Query for recording a customer payment for a renting.
+-- (Assuming the Renting table has a PaymentStatus column.)
+UPDATE renting SET PaymentStatus = 'Paid' WHERE RentingID = 1;
