@@ -8,8 +8,6 @@ export default function Filter(props) {
         rating: "",
         area: "",
         max_price: "",
-        start_date: "",
-        end_date: "",
     });
 
     const handleChange = (e) => {
@@ -26,13 +24,17 @@ export default function Filter(props) {
             <div className="flex flex-row jusitfy-between items-center gap-4">
                 <label>
                     Capacity:
-                    <input
+                    <select
                         className="border"
-                        type="number"
                         name="capacity"
                         value={filters.capacity}
-                        onChange={handleChange}
-                    />
+                        onChange={handleChange}>
+                        <option value="">Select</option>
+                        <option value="Single">Single</option>
+                        <option value="Double">Double</option>
+                        <option value="Triple">Triple</option>
+                        <option value="Suite">Suite</option>
+                    </select>
                 </label>
                 <label>
                     Chain:
@@ -74,32 +76,22 @@ export default function Filter(props) {
                         onChange={handleChange}
                     />
                 </label>
-                <label>
-                    Start Date:
-                    <input
-                        className="border"
-                        type="date"
-                        name="start_date"
-                        value={filters.start_date}
-                        onChange={handleChange}
-                    />
-                </label>
-                <label>
-                    End Date:
-                    <input
-                        className="border"
-                        type="date"
-                        name="end_date"
-                        value={filters.end_date}
-                        onChange={handleChange}
-                    />
-                </label>
                 <button
                     className="btn"
                     onClick={() => {
-                        props.setModal(true);
-                        props.setMode(filters);
-                        props.setFilters(filters);
+                        if (
+                            Object.values(filters).every(
+                                (value) => value.trim() !== ""
+                            )
+                        ) {
+                            props.setModal(true);
+                            props.setMode(filters);
+                            props.setFilters(filters);
+                        } else {
+                            alert(
+                                "Please fill in all fields before searching."
+                            );
+                        }
                     }}>
                     Search
                 </button>

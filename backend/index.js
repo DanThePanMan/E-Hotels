@@ -65,19 +65,76 @@ app.get("/hotels/moreThanAverage", async (req, res) => {
     }
 });
 
-//data range query for bookings
-app.get("/bookings/:start/:end", async (req, res) => {
+//get all bookings
+app.get("/bookings", async (req, res) => {
     try {
-        const { start, end } = req.params;
-        //date is the format '2025-04-01'
         const bookings = await pool.query(
-            "SELECT * FROM booking WHERE checkindate >= $1 AND checkoutdate <= S2",
-            [start, end]
+            "SELECT b.*, c.Name as CustomerName, c.RegistrationDate, c.Address FROM booking b JOIN customer c ON b.CustomerID = c.CustomerID"
         );
 
         res.json(bookings.rows);
     } catch (error) {
         console.error("Error fetching bookings:", error);
+        res.status(500).send("Internal Server Error");
+    }
+});
+
+app.delete("/bookings/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+        const deletedBooking = await pool.query(
+            "DELETE FROM booking WHERE bookingid = $1",
+            [id]
+        );
+        res.json(deletedBooking.rows[0]);
+    } catch (error) {
+        console.error("Error deleting booking:", error);
+        res.status(500).send("Internal Server Error");
+    }
+});
+
+//get all rentings
+app.get("/rentings", async (req, res) => {
+    try {
+        const rentings = await pool.query(
+            "SELECT r.*, c.Name as CustomerName, c.RegistrationDate, c.Address FROM renting r JOIN customer c ON r.CustomerID = c.CustomerID"
+        );
+        res.json(rentings.rows);
+    } catch (error) {
+        console.error("Error fetching bookings:", error);
+        res.status(500).send("Internal Server Error");
+    }
+});
+
+///this might not work
+app.delete("/rentings/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+        const deletedRenting = await pool.query(
+            "DELETE FROM renting WHERE rentingid = $1",
+            [id]
+        );
+        res.json(deletedRenting.rows[0]);
+    } catch (error) {
+        console.error("Error deleting booking:", error);
+        res.status(500).send("Internal Server Error");
+    }
+});
+
+//delete a renting
+app.delete("/rentings/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+        const deletedRenting = await pool.query(
+            "DELETE FROM renting WHERE RentingID = $1",
+            [id]
+        );
+        if (deletedRenting.rows.length === 0) {
+            return res.status(404).send("Renting not found");
+        }
+        res.json(deletedRenting.rows[0]);
+    } catch (error) {
+        console.error("Error deleting renting:", error);
         res.status(500).send("Internal Server Error");
     }
 });
@@ -99,73 +156,37 @@ app.get("/rooms/:postalCode", async (req, res) => {
 });
 
 //dynamic query
-//Parameters: :capacity, :chain, :rating, :area, :max_price, :start_date, :end_date.
+//Parameters: :capacity, :chain, :rating, :area, :max_price,
 app.get(
-    "/rooms/:capacity?/:chain?/:rating?/:area?/:max_price?/:start_date/:end_date",
+    "/rooms/:capacity/:chain/:rating/:area/:max_price",
     async (req, res) => {
         try {
-            const {
-                capacity,
-                chain,
-                rating,
-                area,
-                max_price,
-                start_date,
-                end_date,
-            } = req.params;
+            const { capacity, chain, rating, area, max_price } = req.params;
 
-            let query = `
-                SELECT R.*, H.ChainName, H.Rating, H.NumRooms, H.Address->>'City' AS City
-                FROM room R
-                JOIN hotel H ON R.HotelAddress = H.Address
-                WHERE 1=1
-            `;
-            let params = [];
-
-            if (capacity) {
-                query += " AND R.Capacity = $" + (params.length + 1);
-                params.push(capacity);
-            }
-            if (chain) {
-                query += " AND H.ChainName = $" + (params.length + 1);
-                params.push(chain);
-            }
-            if (rating) {
-                query += " AND H.Rating = $" + (params.length + 1);
-                params.push(rating);
-            }
-            if (area) {
-                query += " AND H.Address->>'City' = $" + (params.length + 1);
-                params.push(area);
-            }
-            if (max_price) {
-                query += " AND R.Price <= $" + (params.length + 1);
-                params.push(max_price);
-            }
-
-            query += `
-                AND NOT EXISTS (
-                    SELECT 1 FROM booking B
-                    WHERE B.HotelAddress = R.HotelAddress
-                    AND B.RoomID = R.RoomID
-                    AND B.CheckInDate < $${params.length + 1}
-                    AND B.CheckOutDate > $${params.length + 2}
-                )
-                AND NOT EXISTS (
-                    SELECT 1 FROM renting Ren
-                    WHERE Ren.HotelAddress = R.HotelAddress
-                    AND Ren.RoomID = R.RoomID
-                    AND Ren.CheckInDate < $${params.length + 1}
-                    AND Ren.CheckOutDate > $${params.length + 2}
-                )
-            `;
-
-            params.push(end_date, start_date);
-
-            const result = await pool.query(query, params);
+            const result = await pool.query(
+                `SELECT R.*, H.ChainName, H.Rating, H.NumRooms, H.Address->>'City' AS City
+FROM room R
+JOIN hotel H ON R.HotelAddress = H.Address
+WHERE R.Capacity = $1
+  AND H.ChainName = $2
+  AND H.Rating = $3
+  AND H.Address->>'City' = $4
+  AND R.Price <= $5
+  AND NOT EXISTS (
+      SELECT 1 FROM booking B
+      WHERE B.HotelAddress = R.HotelAddress
+        AND B.RoomID = R.RoomID
+  )
+  AND NOT EXISTS (
+      SELECT 1 FROM renting Ren
+      WHERE Ren.HotelAddress = R.HotelAddress
+        AND Ren.RoomID = R.RoomID
+  );`,
+                [capacity, chain, rating, area, max_price]
+            );
             res.json(result.rows);
         } catch (error) {
-            console.error("Error fetching hotels:", error);
+            console.error("Error fetching rooms:", error);
             res.status(500).send("Internal Server Error");
         }
     }
@@ -297,7 +318,16 @@ app.put("/bookings/:id", async (req, res) => {
     try {
         const { id } = req.params;
         const updatedBooking = await pool.query(
-            "INSERT INTO renting (HotelAddress, RoomID, CustomerID, EmployeeSSN, CheckInDate, CheckOutDate) SELECT HotelAddress, RoomID, CustomerID, '123-45-6789', CheckInDate, CheckOutDate FROM booking WHERE BookingID = $1; DELETE FROM booking WHERE BookingID = 1;",
+            `INSERT INTO renting (HotelAddress, RoomID, CustomerID, EmployeeSSN, CheckInDate, CheckOutDate)
+        SELECT HotelAddress, RoomID, CustomerID, '123-45-6789', CheckInDate, CheckOutDate
+        FROM booking
+        WHERE BookingID = $1;`,
+            [id]
+        );
+        const q2 = await pool.query(
+            `
+        DELETE FROM booking WHERE BookingID = $1;
+    `,
             [id]
         );
         if (updatedBooking.rows.length === 0) {
@@ -311,7 +341,7 @@ app.put("/bookings/:id", async (req, res) => {
 });
 
 //recording customer payment for renting (Does not work)
-app.put("/renting/:id", async (req, res) => {
+app.put("/rentings/:id", async (req, res) => {
     try {
         const { id } = req.params;
         const updatedRenting = await pool.query(

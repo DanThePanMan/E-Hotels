@@ -46,12 +46,9 @@ export default function Modal(props) {
                         new Date().setDate(new Date().getDate() + days)
                     ).toISOString(),
                 }),
-            })
-                .then((res) => res.json())
-                .then((data) => {
-                    console.log(data);
-                    alert("Booking created successfully!");
-                });
+            }).then(() => {
+                alert("Booking created successfully!");
+            });
         } catch (error) {
             console.log(error);
         }
@@ -63,7 +60,7 @@ export default function Modal(props) {
         if (props.mode === "view") {
             url = `http://localhost:3000/rooms/${props.hotel.PostalCode}`;
         } else if (props.filters) {
-            url = `http://localhost:3000/rooms/${props.filters.capacity}/${props.filters.chain}/${props.filters.rating}/${props.filters.area}/${props.filters.max_price}/${props.filters.start_date}/${props.filters.end_date}`;
+            url = `http://localhost:3000/rooms/${props.filters.capacity}/${props.filters.chain}/${props.filters.rating}/${props.filters.area}/${props.filters.max_price}`;
         }
 
         const fetchData = async () => {
@@ -75,7 +72,12 @@ export default function Modal(props) {
                     },
                 });
                 const data = await response.json();
-                setRooms(data);
+                const uniqueRooms = data.filter(
+                    (room, index, self) =>
+                        index ===
+                        self.findIndex((r) => r.roomid === room.roomid)
+                );
+                setRooms(uniqueRooms);
                 setLoading(false);
                 console.log(data);
             } catch (error) {
@@ -103,6 +105,7 @@ export default function Modal(props) {
                     <p>Loading...</p>
                 ) : (
                     <ul className="flex flex-col gap-4">
+                        {rooms.length === 0 && <p>No rooms available</p>}
                         {rooms.map((room) => (
                             <li
                                 key={room.roomid}
@@ -129,16 +132,9 @@ export default function Modal(props) {
                                 </div>
                                 <div>
                                     <input
-                                        type="text"
-                                        placeholder="Enter your name"
-                                        className="border border-gray-300 rounded px-2 py-1"
-                                        onChange={(e) =>
-                                            setUserName(e.target.value)
-                                        }
-                                    />
-                                    <input
                                         type="number"
-                                        placeholder="1"
+                                        placeholder="Enter number of days"
+                                        min="1"
                                         className="border border-gray-300 rounded px-2 py-1"
                                         onChange={(e) =>
                                             setDays(e.target.value)

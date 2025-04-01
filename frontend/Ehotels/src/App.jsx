@@ -10,10 +10,12 @@ function App() {
                 </h1>
                 <div className="flex flex-row gap-4 mt-4 justify-around">
                     <Link to="Customer">
-                        <button className="btn">customer</button>
+                        <button className="btn">
+                            Log in as customer (dan)
+                        </button>
                     </Link>
                     <Link to="Employee">
-                        <button className="btn">employee</button>
+                        <button className="btn">Log in as employee</button>
                     </Link>
                 </div>
             </Card>
