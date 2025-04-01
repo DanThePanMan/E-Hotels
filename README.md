@@ -6,7 +6,9 @@
 DB_PASSWORD = yourPassword
 DB_NAME = yourDBName
 
-3: run: npm run dev in that folder
+3: go into pgadmin and run defineRelations.sql then populateDatabase.sql
 
-4: cd into the frontend folder, then cd into Ehotels
-5: run: npm run dev
+4: run: npm run dev in that folder
+
+5: in a seperate terminal cd into the frontend folder, then cd into Ehotels
+6: run: npm run dev
