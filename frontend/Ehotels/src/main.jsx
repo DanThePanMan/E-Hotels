@@ -5,6 +5,7 @@ import "./index.css";
 import App from "./App.jsx";
 import Customer from "./Pages/Customer.jsx";
 import Employee from "./Pages/Employee.jsx";
+import Stats from "./Pages/Stats.jsx";
 
 const router = createBrowserRouter([
     {
@@ -18,6 +19,10 @@ const router = createBrowserRouter([
     {
         path: "Employee",
         element: <Employee />,
+    },
+    {
+        path: "Stats",
+        element: <Stats />,
     },
 ]);
 

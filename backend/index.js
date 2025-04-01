@@ -359,7 +359,7 @@ app.put("/rentings/:id", async (req, res) => {
 });
 
 //available rooms per area
-app.get("/rooms/per_area", async (req, res) => {
+app.get("/per_area", async (req, res) => {
     try {
         const rooms = await pool.query(
             "SELECT * FROM available_rooms_per_area;"
@@ -372,9 +372,9 @@ app.get("/rooms/per_area", async (req, res) => {
 });
 
 //aggregated capacity per hotel
-app.get("/hotels/aggregated_capacity", async (req, res) => {
+app.get("/agg", async (_, res) => {
     try {
-        const hotels = pool.query(
+        const hotels = await pool.query(
             "SELECT * FROM aggregated_capacity_per_hotel;"
         );
         res.json(hotels.rows);

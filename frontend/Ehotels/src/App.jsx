@@ -17,6 +17,9 @@ function App() {
                     <Link to="Employee">
                         <button className="btn">Log in as employee</button>
                     </Link>
+                    <Link to="Stats">
+                        <button className="btn">View Stats</button>
+                    </Link>
                 </div>
             </Card>
         </div>
